@@ -1,0 +1,134 @@
+{
+    "manifestVersion": 1,
+    "id": "vulnerability-scan",
+    "name": "WS-Vulnerability Scan",
+    "version": "0.0.14",
+    "publisher": "Tomer",
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],    
+    "description": "Scan for vulnerability with WhiteSource.",
+    "categories": [
+        "Azure Pipelines"
+    ],
+    "icons": {
+        "default": "images/extension-icon.png"        
+    },
+    "files": [
+        {
+            "path": "Task"
+        }
+    ],
+    "tags": [
+        "whitesource", "vulnerability", "scan", "security"
+    ],
+    "repository": {
+        "type": "git",
+        "uri": "https://github.com/LTomer/ws-vulnerability-scan"
+    },
+    "contributions": [
+        {
+            "id": "ws-vulnerability-scan",
+            "type": "ms.vss-distributed-task.task",
+            "description": "Scan vulnerability with WhiteSource agent.",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "Task"
+            }
+        },
+        {
+            "id": "ws-vulnerability-scan-service",
+            "description": "Service endpoint type for vulnerability-scan connections",
+            "type": "ms.vss-endpoint.service-endpoint-type",
+            "targets": [ "ms.vss-endpoint.endpoint-types" ],
+            "properties": {
+              "name": "ws-vulnerability-scan",
+              "displayName": "WS Vulnerability Scan",
+              "url": {
+                "displayName": "Server URL",
+                "helpText": "Server URL (not in used)",
+                "value": "https://saas.whitesourcesoftware.com"
+              },
+              "authenticationSchemes": [
+                {
+                  "type": "ms.vss-endpoint.endpoint-auth-scheme-none",
+                  "inputDescriptors": [
+                    {
+                      "id": "APIKey",
+                      "name": "API Key",
+                      "description": "Set the api key for WhiteSource account.",
+                      "inputMode": "passwordbox",
+                      "isConfidential": true,
+                      "validation": {
+                        "isRequired": true,
+                        "dataType": "string"
+                      }
+                    },
+                    {
+                      "id": "UserKey",
+                      "name": "User Key",
+                      "description": "Set the user key for API call (admin permision requierd). requierd to delete old scan",
+                      "inputMode": "passwordbox",
+                      "isConfidential": true,
+                      "validation": {
+                        "isRequired": false,
+                        "dataType": "string"
+                      }
+                    },
+                    {
+                      "id": "ConfigAgent",
+                      "name": "Agent Configuration",
+                      "description": "Set Agent Configuration.",
+                      "inputMode": "textArea",
+                      "isConfidential": false,
+                      "validation": {
+                        "isRequired": true,
+                        "dataType": "string"
+                      }
+                    },
+                    {
+                      "id": "AgentUrl",
+                      "name": "Agent Url",
+                      "description": "URL for download white source agent, Empty - use defualt url.",
+                      "inputMode": "textBox",
+                      "isConfidential": false,
+                      "validation": {
+                        "isRequired": false,
+                        "dataType": "string"
+                      }
+                    },
+                    {
+                      "id": "DownloadAgentDays",
+                      "name": "Download Agent (Days)",
+                      "description": "Download new agent every X days, Empty - every 7 days.",
+                      "inputMode": "textBox",
+                      "isConfidential": false,
+                      "validation": {
+                        "isRequired": false,
+                        "dataType": "string"
+                      }
+                    },
+                    {
+                      "id": "APIBaseURL",
+                      "name": "API Base URL",
+                      "description": "Get from White Source portal, Integration Tag, under Organization.",
+                      "inputMode": "textBox",
+                      "isConfidential": false,
+                      "validation": {
+                        "isRequired": false,
+                        "dataType": "string"
+                      }
+                    }
+                  ]
+                }
+      
+              ],
+              "helpMarkDown": "<a href=\"url-to-documentation-TEST\" target=\"_blank\"><b>Learn More for TEST</b></a>"
+            }
+          }
+    ]
+}

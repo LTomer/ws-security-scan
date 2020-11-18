@@ -1,0 +1,84 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
+    "id": "5777b643-9f71-4721-ab9b-0ecda4d78f93",
+    "name": "ws-vulnerability-scan",
+    "friendlyName": "WhiteSource Scanner",
+    "description": "Scan for vulnerability with WhiteSource",
+    "helpMarkDown": "",
+    "category": "Utility",
+    "author": "Tomer Levitt",
+    "version": {
+        "Major": 0,
+        "Minor": 0,
+        "Patch": 81
+    },
+    "instanceNameFormat": "WS Vulnerability Scan",
+    "minimumAgentVersion": "2.144.0",
+    "groups": [
+        {
+            "name": "advanced",
+            "displayName": "Advanced",
+            "isExpanded": false
+        }
+    ],
+    "inputs": [
+        {
+            "name": "WSService",
+            "type": "connectedService:ws-vulnerability-scan",
+            "label": "Service Configuration",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Select a service connection to with the right configuration."
+        },
+        {
+            "name": "Folder",
+            "type": "string",
+            "label": "Folder to scan",
+            "defaultValue": "$(BUILD.SOURCESDIRECTORY)",
+            "required": true,
+            "helpMarkDown": "Folder to scan with Unified Agent."
+        },
+        {
+            "name": "ProductName",
+            "type": "string",
+            "label": "Product Name",
+            "defaultValue": "$(SYSTEM.TEAMPROJECT)",
+            "required": true,
+            "helpMarkDown": "Set the product name for the repository."
+        },
+        {
+            "name": "ProjectName",
+            "type": "string",
+            "label": "Project Name",
+            "defaultValue": "$(BUILD.REPOSITORY.NAME)",
+            "required": true,
+            "helpMarkDown": "Set the project name for the repository."
+        },
+        {
+            "name": "DeleteProjectAfterDays",
+            "type": "string",
+            "label": "Delete Project (Days)",
+            "groupName": "advanced",
+            "helpMarkDown": "Delete old project X days after last update on different branch, 0 - disable, Empty - every 7 days, relevant for GIT repository"
+        }
+    ],
+    "execution": {
+        "Node10": {
+            "target": "index.js"
+        }
+    },
+    "messages": {
+        "downloadingAgent": "Downloading WhiteSource unified agent.",
+        "cachingAgent": "Caching agent file.",
+        "agentDownloaded": "Agent downloaded.",
+        "agentDownloadInfo": "Agent created at %s before %s days.",
+        "missingAgent": "WS Agent doesn't exist on the build machine.",
+        "missingService": "Service connection doesn't exist.",
+        "missingServiceDetailes": "Service connection detailes doesn't exist.",
+        "missingConfig": "Config file doesn't exist on the build machine.",
+        "saveConfigFile": "Save configuration to file.",
+        "writeToFileFailed": "Failed saving configuration file.",
+        "Info_UsingToolPath": "Using tool path: %s",
+        "Info_UsingVersion": "Using version: %s"
+    }
+}

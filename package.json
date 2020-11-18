@@ -1,0 +1,33 @@
+{
+  "name": "ws-vulnerability-scan",
+  "version": "1.0.0",
+  "description": "Scan for vulnerability with WhiteSource",
+  "main": "make.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LTomer/ws-vulnerability-scan.git"
+  },
+  "keywords": [
+    "vulnerability",
+    "whitesource",
+    "scan"
+  ],
+  "author": "Tomer Levitt",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LTomer/ws-vulnerability-scan/issues"
+  },
+  "homepage": "https://github.com/LTomer/ws-vulnerability-scan#readme",
+  "devDependencies": {
+    "@types/mocha": "^8.0.3",
+    "@types/node": "^14.6.0",
+    "@types/q": "^1.5.4",
+    "sync-request": "^6.1.0"
+  },
+  "dependencies": {
+    "axios": "^0.20.0"
+  }
+}
