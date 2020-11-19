@@ -6,12 +6,12 @@ import simpleGit, { SimpleGit } from 'simple-git';
 import { DownloadAgent } from './agent';
 import { v4 as uuidv4 } from 'uuid';
 
-
 const VAR_SERVICE_NAME = 'WSService';
 const VAR_PRODUCT_NAME = 'ProductName';
 const VAR_PROJECT_NAME = 'ProjectName';
 const VAR_FOLDER = 'Folder';
 const VAR_DELETE_PROJECT_DAYS = 'DeleteProjectAfterDays'
+const VAR_SCAN_EXPIRED_DAYS = 'ScanExpired'
 const SOURCE_CONTROL_GIT = 'TfsGit';
 const SOURCE_CONTROL_GIT_MASTER = 'master';
 
@@ -51,7 +51,9 @@ async function run() {
     const scanFolder: string = taskLib.getInput(VAR_FOLDER, true) || '';
     const config: string = endpointAuthorization.parameters['ConfigAgent'] || '';
     const configFile: string = path.join(taskLib.getVariable('agent.tempDirectory') || '', `wss-unified-agent-${uuidv4()}.config`);
-    const packagesFilePattern: string = "(\.csproj|packages\.config)" //TODO - get value from connection service (Package file pattern)
+    const packagesFilePattern: string =  endpointAuthorization.parameters['PackagesFilePattern'] || '';
+    //"(\.csproj$|(^packages|\/packages)\.config$)" 
+    const scanExpired: number = parseInt(taskLib.getInput(VAR_SCAN_EXPIRED_DAYS) || '') || 30;
 
     //write config details to file, exit if somethings go wrong
     if(!util.writeToFile(configFile, config)){
@@ -60,11 +62,10 @@ async function run() {
     }
 
     //Check if scan requierd
+    let isScan: boolean = true
     let masterProjectName: string = GetWSProject(sourceControlType, SOURCE_CONTROL_GIT_MASTER, projectName)
-    let productToken: string = await api.getProductToken(apiBaseURL, apiKey, userKey, productName)
-    let projectTokenMaster: string = await api.getProjectToken(apiBaseURL, userKey, productToken, masterProjectName)
-    let isScan: boolean = await IsRunScan(sourceControlType, gitBranchName, packagesFilePattern, apiBaseURL, userKey, projectTokenMaster)
-    
+    isScan = await isRunScan(apiBaseURL, apiKey, userKey, productName, masterProjectName, isScan, sourceControlType, gitBranchName, packagesFilePattern, scanExpired);
+
     if(isScan){
         const agentFullName = await DownloadAgent(agentUrl, downloadAgentDays);
         if(!agentFullName){
@@ -105,64 +106,108 @@ function GetWSProject(sourcecontrol_type: string, gitBranchName: string, project
     return `${project}(${gitBranchName})`;
 }
 
-async function IsRunScan(sourcecontrol_type: string, branchNme: string, filePattern: string, url: string, userKey: string, projectToken: string) {
-    if(sourcecontrol_type != SOURCE_CONTROL_GIT)
+async function isRunScan(apiBaseURL: string, apiKey: string, userKey: string, productName: string, masterProjectName: string, isScan: boolean, sourceControlType: string, gitBranchName: string, packagesFilePattern: string, scanExpired: number) {
+    if(sourceControlType != SOURCE_CONTROL_GIT){
+        console.log(taskLib.loc("ScanReasonNotGit"))
         return true
-    if(branchNme == SOURCE_CONTROL_GIT_MASTER)
+    }
+    
+    if(gitBranchName == SOURCE_CONTROL_GIT_MASTER){
+        console.log(taskLib.loc("ScanReasonMaster"))
         return true
-
-    let packageListChanged = await GitDiffWith(SOURCE_CONTROL_GIT_MASTER, filePattern)
-    if(packageListChanged)
+    }
+    
+    let packageListChanged = await GitDiffWith(SOURCE_CONTROL_GIT_MASTER, packagesFilePattern)
+    if(packageListChanged){
         return true
-
-    let resVulnerabilityReport = await api.getProjectVulnerabilityReport(url, userKey, projectToken)
+    }
+    
+    let productToken: string = await api.getProductToken(apiBaseURL, apiKey, userKey, productName);
+    if (typeof productToken == undefined){
+        console.log(taskLib.loc("ScanReasonNoProduct"))
+        return true
+    }
+    
+    let projectTokenMaster: string = await api.getProjectToken(apiBaseURL, userKey, productToken, masterProjectName);
+    if (typeof productToken == undefined){
+        console.log(taskLib.loc("ScanReasonNoProject"))
+        return true
+    }
+    
+    let resVulnerabilityReport = await api.getProjectVulnerabilityReport(apiBaseURL, userKey, projectTokenMaster)
     let objVulnerabilityReport = JSON.parse(resVulnerabilityReport)
     let lastScanOnMasterFailed = objVulnerabilityReport.vulnerabilities.length > 0
-    if(lastScanOnMasterFailed)
+    if(lastScanOnMasterFailed){
+        console.log(taskLib.loc("ScanReasonNotVulnerability"))
         return true
-
-    //const scanExpired: number = 30; //TODO - get value from task (Scan Expired)
-    //TODO: Check the last scan, if it bigger then 30 day run new scan
-    //let resVitals = await api.getProjectVitals(url, userKey, projectToken)
-    //let objVitals = JSON.parse(resVitals)
-    let isScanExpired = false
-    if(isScanExpired)
+    }
+    
+    let resProjectVitals = await api.getProjectVitals(apiBaseURL, userKey, projectTokenMaster)
+    let objProjectVitals = JSON.parse(resProjectVitals)
+    let lastUpdate = objProjectVitals.projectVitals[0]['lastUpdatedDate']
+    let daysSince = util.daysSince(lastUpdate)
+    if(daysSince > scanExpired || daysSince < 0){
+        console.log(taskLib.loc("ScanReasonExpiredScan"))
         return true
+    }
 
     return false
 }
 
 //return false if it equal other return true (not equal, error, git not installed)
 async function GitDiffWith(branchNme: string, filePattern: string) {
-    if (typeof filePattern != undefined || filePattern == null || filePattern != ""){
+    if (typeof filePattern == undefined || filePattern == null || filePattern.trim() == ""){
+        console.log(taskLib.loc("ScanReasonPatternMissing"))
         return true
     }
 
     var commandExistsSync = require('command-exists').sync;
     let isGitExist = commandExistsSync('git')
-    if(!isGitExist)
+    if(!isGitExist){
+        console.log(taskLib.loc("ScanReasonGitMissing"))
         return true
+    }
 
     const gitSourceDirectory: string = taskLib.getVariable('BUILD_SOURCESDIRECTORY') || ''
-    if(!gitSourceDirectory)
+    if(!gitSourceDirectory){
+        console.log(taskLib.loc("ScanReasonDirectoryMissing"))
         return true
+    }
 
     const git: SimpleGit = simpleGit(gitSourceDirectory);
     try {
         let initResult = await git.raw(["diff", "--name-only", branchNme])
-        let val = initResult.replace('\\','/').replace('\n', " ; ").trim()
-        val = `${val} ; `
+        let val = initResult.replace('\\','/').trim()
 
-        var re = new RegExp(filePattern,"g");
+        var re = new RegExp(filePattern, "mi");//multilines, insensitive 
         var m = re.exec(val);
-        if (m) 
+        if (m){
+            console.log(taskLib.loc("ScanReasonDiff"))
             return true
+        }
     }
     catch (e) { 
         console.log(e)
+        console.log(taskLib.loc("ScanReasonDiffFailed"))
         return true
     }
 
+    try {
+        let initResult = await git.raw(["ls-tree", "-r", "--name-only", branchNme])
+        let val = initResult.replace('\\','/').trim()
+
+        var re = new RegExp(filePattern, "mi");//multilines, insensitive 
+        var m = re.exec(val);
+        if (m){
+            console.log(taskLib.loc("ScanReasonPatternNotValid"))
+            return true
+        }
+    }
+    catch (e) { 
+        console.log(e)
+        console.log(taskLib.loc("ScanReasonDiffFailed"))
+        return true
+    }
     return false
 }
 

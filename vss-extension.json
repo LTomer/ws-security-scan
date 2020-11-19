@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "vulnerability-scan",
     "name": "WS-Vulnerability Scan",
-    "version": "0.0.14",
+    "version": "0.0.17",
     "publisher": "Tomer",
     "targets": [
         {
@@ -105,6 +105,17 @@
                       "id": "DownloadAgentDays",
                       "name": "Download Agent (Days)",
                       "description": "Download new agent every X days, Empty - every 7 days.",
+                      "inputMode": "textBox",
+                      "isConfidential": false,
+                      "validation": {
+                        "isRequired": false,
+                        "dataType": "string"
+                      }
+                    },
+                    {
+                      "id": "PackagesFilePattern",
+                      "name": "Packages File Pattern",
+                      "description": "Discribe the filenames that contain list of packages that necessary to the project with Regex. i.e. .Net Core - csproj files. This propery relevant for Git repository.",
                       "inputMode": "textBox",
                       "isConfidential": false,
                       "validation": {

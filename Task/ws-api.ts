@@ -1,6 +1,7 @@
 //import unirest = require('unirest');
 //import * as taskLib from 'azure-pipelines-task-lib/task';
 import fs = require('fs');
+import util = require("./util.js");
 //import { stringify } from 'querystring';
 
 function apiRequest(url: string, body: any): Promise<string> {
@@ -32,12 +33,16 @@ export async function getProductToken(url: string, orgToken: string, userKey: st
     let res = await apiRequest(url, body);
     let obj = JSON.parse(res)
 
-    for(var i = 0; i < obj.products.length; ++i){
-        if(obj.products[i].productName == productName || obj.products[i].productToken == productName){
-            return obj.products[i].productToken
-        }
+    try {
+        for(var i = 0; i < obj.products.length; ++i){
+            if(obj.products[i].productName == productName || obj.products[i].productToken == productName){
+                return obj.products[i].productToken
+            }
+        }    
     }
-
+    catch (e) { 
+    }
+  
     return undefined
 }
 
@@ -98,10 +103,14 @@ export async function getProjectToken(url: string, userKey: string, productToken
     let res = await getAllProjects(url, productToken, userKey)
     let obj = JSON.parse(res)
 
-    for(var i = 0; i < obj.projects.length; ++i){
-        if(obj.projects[i].projectName == projectName || obj.projects[i].projectToken == projectName){
-            return obj.projects[i].projectToken
+    try{
+        for(var i = 0; i < obj.projects.length; ++i){
+            if(obj.projects[i].projectName == projectName || obj.projects[i].projectToken == projectName){
+                return obj.projects[i].projectToken
+            }
         }
+    }
+    catch (e) { 
     }
 
     return undefined
@@ -127,8 +136,7 @@ export async function deleteProjectScanedBeforeDays(url: string, userKey: string
         var dateString = project.projectVitals.lastUpdatedDate;  
         let lastUpdatedDate = new Date(dateString)
 
-        var diff = Math.abs(today.getTime() - lastUpdatedDate.getTime());
-        var diffDays = Math.ceil(diff / (1000 * 3600 * 24));
+        var diffDays = util.daysBetween(lastUpdatedDate, today)
         
         if(diffDays > days){
             let resDel = await deleteProject(url, userKey, productToken, projectToken)

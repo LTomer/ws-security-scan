@@ -10,7 +10,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 81
+        "Patch": 92
     },
     "instanceNameFormat": "WS Vulnerability Scan",
     "minimumAgentVersion": "2.144.0",
@@ -60,6 +60,13 @@
             "label": "Delete Project (Days)",
             "groupName": "advanced",
             "helpMarkDown": "Delete old project X days after last update on different branch, 0 - disable, Empty - every 7 days, relevant for GIT repository"
+        },
+        {
+            "name": "ScanExpired",
+            "type": "string",
+            "label": "Scan Expired on master (Days)",
+            "groupName": "advanced",
+            "helpMarkDown": "Run WS scan on branch if the master scan is expired, Empty - every 30 days, relevant for GIT repository"
         }
     ],
     "execution": {
@@ -78,7 +85,19 @@
         "missingConfig": "Config file doesn't exist on the build machine.",
         "saveConfigFile": "Save configuration to file.",
         "writeToFileFailed": "Failed saving configuration file.",
-        "Info_UsingToolPath": "Using tool path: %s",
-        "Info_UsingVersion": "Using version: %s"
+        "Info_UsingToolPath": "Using tool path: %s.",
+        "Info_UsingVersion": "Using version: %s.",
+        "ScanReasonNotGit": "Scan Reason: It's not git repository.",
+        "ScanReasonMaster": "Scan Reason: This is master branch.",
+        "ScanReasonDiff": "Scan Reason: Some packages was changed.",
+        "ScanReasonPatternNotValid": "Scan Reason: Git not tracked on files that defined by FilePattern",
+        "ScanReasonNoProduct": "Scan Reason: Product not exist.",
+        "ScanReasonNoProject": "Scan Reason: Project not exist.",
+        "ScanReasonNotVulnerability": "Scan Reason: Last scan on master was failed.",
+        "ScanReasonExpiredScan": "Scan Reason: Last scan on master was Expired.",
+        "ScanReasonPatternMissing": "Scan Reason: Package file pattern does not defined.",
+        "ScanReasonGitMissing": "Scan Reason: Git cli not installed on build machine.",
+        "ScanReasonDirectoryMissing": "Scan Reason: Source directory unknown.",
+        "ScanReasonDiffFailed": "Scan Reason: Diff branch with master branch failed."
     }
 }

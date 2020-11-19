@@ -26,3 +26,28 @@ export function writeToFile(filename: string, value: string) {
         return false
     }
 }
+
+export function daysSince(date: string) {
+    try{
+        let from = new Date(date)
+        const today = new Date();
+        
+        return daysBetween(from, today)
+    }
+    catch(error){
+        console.error(error)
+        return -1
+    }
+}
+
+export function daysBetween(fromDate: Date, toDate: Date) {
+    try{
+        var diff = Math.abs(toDate.getTime() - fromDate.getTime());
+        var diffDays = Math.ceil(diff / (1000 * 3600 * 24));
+        return diffDays
+    }
+    catch(error){
+        console.error(error)
+        return -1
+    }
+}
